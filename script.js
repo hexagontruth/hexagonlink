@@ -1,7 +1,8 @@
+let scene;
 (() => {
   document.body.style.opacity = 0;
   let loaded = false;
-  let scrollBlocks, buttons, alert, alertText, timer, canvas;
+  let scrollBlocks, buttons, alert, alertText, timer;
 
   const REDIRECTS = {
     discord: 'https://discord.gg/t6hrz7S',
@@ -62,8 +63,7 @@
       showAlert('Thank u for ur submission');
     }
 
-    let canvas = document.querySelector('canvas#canvas');
-    canvas && canvasInit(canvas);
+    scene = Scene.fromCanvas(document.querySelector('canvas#canvas'));
 
     document.body.style.transition = 'opacity 1000ms';
     document.body.style.opacity = 1;
@@ -177,23 +177,24 @@
     }
   });
 
-  // Canvas stuff
-  let scene, camera, renderer, cube, w, h;
+  class Scene {
+    static fromCanvas(canvas) {
+      let sceneType = canvas.getAttribute('data-scene');
+      return sceneType && new Scene(canvas, sceneType);
+    }
+    constructor(canvas, sceneType) {
+      this.canvas = canvas;
+      this.sceneType = sceneType;
 
-  function canvasInit(_canvas) {
-      canvas = _canvas;
+      this.scene = new THREE.Scene();
+      this.renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
 
-      scene = new THREE.Scene();
-      window.scene = scene;
-      renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+      this.camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100);
+      this.camera.position.set(5, 5, 5);
+      this.camera.lookAt(this.scene.position);
 
-      camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100);
-      camera.position.set(5, 5, 5);
-      camera.lookAt(scene.position);
-
-      window.addEventListener('resize', resize);
-      window.addEventListener('scroll', parallaxScroll);
-      resize();
+      window.addEventListener('resize', (ev) => this.onResize(ev));
+      window.addEventListener('scroll', (ev) => this.onScroll(ev));
 
       let geometry = new THREE.Geometry();
       geometry.vertices.push(
@@ -242,38 +243,43 @@
         geometry.faces[i].color = geometry.faces[i + 1].color = color;
       }
 
-      cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({vertexColors: THREE.FaceColors}));
-      scene.add(cube);
-      render();
-      canvas.style.opacity = 1;
-  }
+      this.cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({vertexColors: THREE.FaceColors}));
+      this.scene.add(this.cube);
+      requestAnimationFrame(() => {
+      this.onResize();
+        this.onScroll();
+        this.render();
+        this.canvas.style.opacity = 1;
+      });
+    }
 
-  function render() {
-    cube.rotation.y += 0.01;
-    cube.rotation.z += 0.01;
-    renderer.render(scene, camera);
-    requestAnimationFrame(render);
-  }
+    render() {
+      this.cube.rotation.y += 0.01;
+      this.cube.rotation.z += 0.01;
+      this.renderer.render(this.scene, this.camera);
+      requestAnimationFrame(() => this.render());
+    }
 
-  function parallax() {
-    let p = document.documentElement.scrollHeight / window.innerHeight;
-    return 1 + (p - 1) / 2;
-  }
+    onScroll() {
+      let range = document.documentElement.scrollHeight - window.innerHeight;
+      let pos = window.scrollY / range;
+      canvas.style.top = `-${(pos * 100).toFixed(2)}%`;
+    }
 
-  function parallaxScroll() {
-    let range = document.documentElement.scrollHeight - window.innerHeight;
-    let pos = window.scrollY / range;
-    canvas.style.top = `-${(pos * 100).toFixed(2)}%`;
-  }
+    onResize() {
+      let p = this.getParallaxAspect();
+      let w = window.innerWidth;
+      let h = window.innerHeight * p;
+      this.canvas.style.height = (p * 100).toFixed(2) + '%';
+      this.renderer.setSize(w, h);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    }
 
-  function resize() {
-    let p = parallax();
-    w = window.innerWidth;
-    h = window.innerHeight * p;
-    canvas.style.height = (p * 100).toFixed(2) + '%';
-    renderer.setSize(w, h);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
+    getParallaxAspect() {
+      let p = document.documentElement.scrollHeight / window.innerHeight;
+      return 1 + (p - 1) / 2;
+    }
   }
 
 })();
