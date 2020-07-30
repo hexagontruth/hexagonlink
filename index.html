@@ -23,6 +23,9 @@ Permission is hereby granted to use, copy, modify, and distribute this software 
   <meta name="twitter:image:alt" content="Hexagon of life"/>
 </head>
 <body class="home">
+  <div class="parallax">
+    <canvas id="canvas"></canvas>
+  </div>
   <article class="flex">
     <div class="block flex end">
       <h1><img class="logo" src="media/hexstar.png" title="Hexagonal Awareness" alt="Hexagonal Awareness"/></h1>
@@ -38,9 +41,7 @@ Permission is hereby granted to use, copy, modify, and distribute this software 
     </section>
   </article>
   <article class="flex">
-    <div class="block">
-      <img class="cover" src="media/squiggler.jpg" alt="Some colorful hexagons"/>
-    </div>
+    <div class="block window"></div>
     <div class="block flex">
       <section class="flex pad">
         <p>
@@ -50,9 +51,7 @@ Permission is hereby granted to use, copy, modify, and distribute this software 
     </div>
   </article>
   <article class="flex">
-    <div class="block">
-      <img class="cover" src="media/afp.jpg" alt="AFP concept variant"/>
-    </div>
+    <div class="block window"></div>
     <div class="block flex center">
       <section class="flex pad">
         <p>
@@ -67,9 +66,7 @@ Permission is hereby granted to use, copy, modify, and distribute this software 
     </div>
   </article>
   <article class="flex">
-    <div class="block">
-      <img class="cover" src="media/machine.jpg" alt="AFP concept variant"/>
-    </div>
+    <div class="block window"></div>
     <div class="block flex center">
       <section class="container flex-360 pad">
         <ul class="lowercase columns nowrap">
@@ -93,5 +90,6 @@ Permission is hereby granted to use, copy, modify, and distribute this software 
     </div>
   </article>
   <script src="script.js"></script>
+  <script src="vendor/three.js"></script>
 </body>
 </html>

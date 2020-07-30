@@ -1,7 +1,7 @@
 (() => {
   document.body.style.opacity = 0;
   let loaded = false;
-  let scrollBlocks, buttons, alert, alertText, timer;
+  let scrollBlocks, buttons, alert, alertText, timer, canvas;
 
   const REDIRECTS = {
     discord: 'https://discord.gg/t6hrz7S',
@@ -61,6 +61,9 @@
     if (args.includes('contact')) {
       showAlert('Thank u for ur submission');
     }
+
+    let canvas = document.querySelector('canvas#canvas');
+    canvas && canvasInit(canvas);
 
     document.body.style.transition = 'opacity 1000ms';
     document.body.style.opacity = 1;
@@ -173,5 +176,104 @@
       }
     }
   });
+
+  // Canvas stuff
+  let scene, camera, renderer, cube, w, h;
+
+  function canvasInit(_canvas) {
+      canvas = _canvas;
+
+      scene = new THREE.Scene();
+      window.scene = scene;
+      renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+
+      camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100);
+      camera.position.set(5, 5, 5);
+      camera.lookAt(scene.position);
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('scroll', parallaxScroll);
+      resize();
+
+      let geometry = new THREE.Geometry();
+      geometry.vertices.push(
+        new THREE.Vector3(-1, -1,  1),  // 0
+        new THREE.Vector3( 1, -1,  1),  // 1
+        new THREE.Vector3(-1,  1,  1),  // 2
+        new THREE.Vector3( 1,  1,  1),  // 3
+        new THREE.Vector3(-1, -1, -1),  // 4
+        new THREE.Vector3( 1, -1, -1),  // 5
+        new THREE.Vector3(-1,  1, -1),  // 6
+        new THREE.Vector3( 1,  1, -1),  // 7
+      );
+
+      geometry.faces.push(
+        // front
+        new THREE.Face3(0, 3, 2),
+        new THREE.Face3(0, 1, 3),
+        // right
+        new THREE.Face3(1, 7, 3),
+        new THREE.Face3(1, 5, 7),
+        // back
+        new THREE.Face3(5, 6, 7),
+        new THREE.Face3(5, 4, 6),
+        // left
+        new THREE.Face3(4, 2, 6),
+        new THREE.Face3(4, 0, 2),
+        // top
+        new THREE.Face3(2, 7, 6),
+        new THREE.Face3(2, 3, 7),
+        // bottom
+        new THREE.Face3(4, 1, 0),
+        new THREE.Face3(4, 5, 1),
+      );
+
+      let c = [
+        'red',
+        'orange',
+        'yellow',
+        'green',
+        'cyan',
+        // 'blue',
+        'purple',
+      ]
+      for (let i = 0; i < 12; i += 2) {
+        let color = new THREE.Color(c[i / 2]);
+        geometry.faces[i].color = geometry.faces[i + 1].color = color;
+      }
+
+      cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({vertexColors: THREE.FaceColors}));
+      scene.add(cube);
+      render();
+      canvas.style.opacity = 1;
+  }
+
+  function render() {
+    cube.rotation.y += 0.01;
+    cube.rotation.z += 0.01;
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+  }
+
+  function parallax() {
+    let p = document.documentElement.scrollHeight / window.innerHeight;
+    return 1 + (p - 1) / 2;
+  }
+
+  function parallaxScroll() {
+    let range = document.documentElement.scrollHeight - window.innerHeight;
+    let pos = window.scrollY / range;
+    canvas.style.top = `-${(pos * 100).toFixed(2)}%`;
+  }
+
+  function resize() {
+    let p = parallax();
+    w = window.innerWidth;
+    h = window.innerHeight * p;
+    canvas.style.height = (p * 100).toFixed(2) + '%';
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
 
 })();
